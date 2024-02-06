@@ -5,29 +5,42 @@ __lua__
 function _init()
 	cls(0)
 	state = 0
+	frame = 0
 end
 
 function startgame()
-	x=63
-	y=100
-	vel_x=0
-	vel_y=0
-	speed=3
+	pl = {
+	x = 63,
+	y = 100,
+	vel_x=0,
+	vel_y=0,
+	speed=3,
 	
-	score = 0
+	flame = 4,
+	shipspr=2,
+	muzzle=0,
 	
-	flame = 4
-	shipspr=2
-	muzzle=0
-	
-	lives = 3
-	
-	maxlives= 3 
+	lives = 3,
 	bombs = 3
+	
+	
+	}
+	maxlives = 3
+	score = 0
+	frame = 0
+	
+	
 	
 	
 	enemies = {}
 	add(enemies,add_enemy())
+	add(enemies,add_enemy())
+	add(enemies,add_enemy())
+	add(enemies,add_enemy())
+	add(enemies,add_enemy())
+	
+	
+	
 	
 	plbullets = {}
 	stars = starfield()
@@ -36,6 +49,7 @@ end
 
 
 function _update()
+	frame=(frame+1)%60
 	if state==0 then
 		state=0
 		if(btnp(4) or btnp(5)) then
@@ -50,10 +64,10 @@ end
 function _draw()
 	print(state)
 	if state==0 then
-		cls(12)
-		print("shmup game",45,10,0)
-		print("in pico 8",50,30,0)
-		print("press button to begin",30,50)
+		cls(1)
+		print("shmup game",45,10,blink(frame))
+		print("in pico 8",50,30,blink(frame))
+		print("press button to begin",30,50,blink(frame))
 	elseif state==1 then
 				draw_game()
 	elseif state==2 then
@@ -66,39 +80,37 @@ end
 -->8
 --update
 function update_game()
+	
+	if(pl.lives==0) state=2
 
-	if(lives==0) then 
-	 
-		state=2
-	end
-
-	vel_x=0
-	vel_y=0
-	if(btn(0)) vel_x=-speed
-	if(btn(1)) vel_x=speed
-	if(btn(2)) vel_y=-speed
-	if(btn(3)) vel_y=speed
+	pl.vel_x=0
+	pl.vel_y=0
+	if(btn(0)) pl.vel_x=-pl.speed
+	if(btn(1)) pl.vel_x=pl.speed
+	if(btn(2)) pl.vel_y=-pl.speed
+	if(btn(3)) pl.vel_y=pl.speed
 	if(btnp(5)) then 
-		boolet(x,y)	
+		boolet(pl.x,pl.y)	
 	end
-	if(btnp(4) and bombs>0) then
-		bombs=bombs-1
+	if(btnp(4) and pl.bombs>0) then
+		pl.bombs+=-1
 		stars= {}
 	end
 	
-	x=x+vel_x
-	y=y+vel_y
-	shipspr = 2
-	if(vel_x>0) shipspr = 3
-	if(vel_x<0) shipspr = 1
+	pl.x+=pl.vel_x
+	pl.y+=pl.vel_y
+	pl.shipspr = 2
+	if(pl.vel_x>0) pl.shipspr = 3
+	if(pl.vel_x<0) pl.shipspr = 1
 	
-	if(x>128) x=0
-	if(x<0) x=128
-	if(y>128) y=0
-	if(y<0) y=128
+	if(pl.x>128) pl.x=0
+	if(pl.x<0) pl.x=128
+	if(pl.y>128) pl.y=0
+	if(pl.y<0) pl.y=128
 	
-	flame+=1
-	if(flame == 8) flame = 4
+	pl.flame+=1
+	if(pl.flame == 8) pl.flame = 4
+	
 	
 	
 end
@@ -112,10 +124,10 @@ function draw_game()
 	cls(0)
 					hit_box()
  --draw ship
-	spr(shipspr,x,y)
+	spr(pl.shipspr,pl.x,pl.y)
 	
 	--draw flame
-	spr(flame,x,y+8)
+	spr(pl.flame,pl.x,pl.y+8)
 	foreach(stars,render_starfield)
 	--draw bullets
 	foreach(plbullets,draw_bullet)
@@ -124,32 +136,32 @@ function draw_game()
 	
 	
 	
-	if(muzzle > 0) then
-		circfill(x+2,y-1,muzzle,7)
-		circfill(x+5,y-1,muzzle,7)
-		muzzle=muzzle -1
+	if(pl.muzzle > 0) then
+		circfill(pl.x+2,pl.y-1,pl.muzzle,7)
+		circfill(pl.x+5,pl.y-1,pl.muzzle,7)
+		pl.muzzle-=1
 	end
 	
 --ui
 	print("score:"..score,50,0,12)
 	
 	for i=1,maxlives do
-		if (lives>=i) then
+		if (pl.lives>=i) then
 			spr(49,0+i*9,0)
 		end
-		if (lives<i) then
+		if (pl.lives<i) then
 			spr(50,0+i*9,0)
 		end
 	end
 	
-	for i=1,bombs do
+	for i=1,pl.bombs do
 			spr(51,128-i*9)
 	end
 	
-	--debug
-	--print(x.." "..y)
-	--print(frame)
-	--print(count(plbullets))
+	--debug (add a - before the bracket
+	---[[
+	print(frame)
+	--]]
 end
 
 
@@ -168,7 +180,7 @@ function draw_bullet(o)
 		--sfx(1)
 	end
 	
-	o.y=o.y-10
+	o.y-=10
 	
 	spr(o.bspr,o.x,o.y)
 	if(o.bspr != 18) o.bspr+=1
@@ -181,7 +193,7 @@ function boolet(pl_x,pl_y)
 	bspr = 16
 	}
 	sfx(0)
-	muzzle=4
+	pl.muzzle=4
 	add(plbullets,bullet)
 end
 
@@ -212,7 +224,7 @@ end
 
 
 function render_starfield(o)
-	o.y=(o.y+o.vely)
+	o.y+=o.vely
 	pset(o.x,o.y,o.col)
 	if(o.vely==4) then
 		line(o.x,o.y-6,o.x,o.y-1,6)
@@ -273,8 +285,12 @@ end
 
 
 
+function blink(nr)
 
 
+	return (((nr-(nr%2))%6)/2)+5
+	
+end
 
 __gfx__
 00000000033030000030030000030330008aa900008aa8000089a800009aa800008aa90000000000000000000000000000000000000000000000000000000000
