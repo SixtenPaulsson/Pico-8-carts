@@ -21,8 +21,8 @@ function startgame()
 	muzzle=0,
 	
 	lives = 3,
-	bombs = 3
-	
+	bombs = 3,
+	bullets = {}
 	
 	}
 	maxlives = 3
@@ -35,15 +35,17 @@ function startgame()
 	enemies = {}
 	add(enemies,add_enemy())
 	add(enemies,add_enemy())
-	add(enemies,add_enemy())
-	add(enemies,add_enemy())
-	add(enemies,add_enemy())
 	
 	
 	
 	
-	plbullets = {}
-	stars = starfield()
+	
+	enemy_bullets = {}
+	
+	stars = {}
+	for i=1,100 do
+	 add(stars,createstar())
+	end
 end
 
 
@@ -58,7 +60,14 @@ function _update()
 		end
 	elseif state==1 then
 		update_game()
+	elseif state==2 then
+	
+		if(btnp(4) or btnp(5)) then
+			startgame()
+			state=1
+		end
 	end
+	
 end
 
 function _draw()
@@ -73,6 +82,7 @@ function _draw()
 	elseif state==2 then
 		cls(8)
 		print("dead",0,0,4)
+		
 	end
 end
 
@@ -90,11 +100,11 @@ function update_game()
 	if(btn(2)) pl.vel_y=-pl.speed
 	if(btn(3)) pl.vel_y=pl.speed
 	if(btnp(5)) then 
-		boolet(pl.x,pl.y)	
+		add(pl.bullets,bullet(pl.x,pl.y,true,0.45,5))
 	end
 	if(btnp(4) and pl.bombs>0) then
 		pl.bombs+=-1
-		stars= {}
+		enemy_bullets= {}
 	end
 	
 	pl.x+=pl.vel_x
@@ -111,6 +121,11 @@ function update_game()
 	pl.flame+=1
 	if(pl.flame == 8) pl.flame = 4
 	
+	foreach(enemies,enemy_behaviour)
+	
+	hit_box()
+	
+	
 	
 	
 end
@@ -122,17 +137,16 @@ function draw_game()
 	
 	--clear screen
 	cls(0)
-					hit_box()
+					
  --draw ship
 	spr(pl.shipspr,pl.x,pl.y)
-	
-	--draw flame
 	spr(pl.flame,pl.x,pl.y+8)
+	
 	foreach(stars,render_starfield)
-	--draw bullets
-	foreach(plbullets,draw_bullet)
+	foreach(pl.bullets,draw_bullet)
 	foreach(enemies,render_enemies)
-	--foreach(plbullets,draw_bullet)
+	foreach(enemy_bullets,draw_bullet)
+	--foreach(pl.bullets,draw_bullet)
 	
 	
 	
@@ -146,20 +160,18 @@ function draw_game()
 	print("score:"..score,50,0,12)
 	
 	for i=1,maxlives do
-		if (pl.lives>=i) then
-			spr(49,0+i*9,0)
-		end
-		if (pl.lives<i) then
-			spr(50,0+i*9,0)
-		end
+		if (pl.lives>=i) spr(49,0+i*9,0)
+		if (pl.lives<i) spr(50,0+i*9,0)
 	end
 	
 	for i=1,pl.bombs do
-			spr(51,128-i*9)
+	 spr(51,128-i*9)
 	end
 	
+	
+	print("90 5 "..cos(0.25).." "..sin(0.25)) 
 	--debug (add a - before the bracket
-	---[[
+	--[[
 	print(frame)
 	--]]
 end
@@ -172,39 +184,39 @@ end
 -->8
 --everything to do with bullets
 --also some other elements
-function draw_bullet(o)
-	--print("hello")
-	
-	if(o.y<-5) then
-		del(plbullets,o)
-		--sfx(1)
-	end
-	
-	o.y-=10
-	
-	spr(o.bspr,o.x,o.y)
-	if(o.bspr != 18) o.bspr+=1
-end
 
-function boolet(pl_x,pl_y)
+
+function bullet(pl_x,pl_y,yours,angle,speed)
 	local bullet= {
 	x = pl_x,
 	y = pl_y-2,
-	bspr = 16
+	bspr = 16,
+	--true==player
+	owner = yours,
+	vel_x = cos(angle)*speed,
+	vel_y = sin(angle)*speed
 	}
 	sfx(0)
-	pl.muzzle=4
-	add(plbullets,bullet)
+	return bullet
 end
 
-
-function starfield()
-	local star_list= {}
-	for i=1,100 do
-		add(star_list,createstar())
+function draw_bullet(o)
+	if(o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128) then
+		del(plbullets,o)
+		--sfx(1)
 	end
-	return star_list
+	o.x+=o.vel_x
+	o.y+=o.vel_y
+	
+	spr(o.bspr,o.x,o.y)
+	
+	if(o.bspr != 18) o.bspr+=1
 end
+
+
+
+
+
 
 function createstar()
 	local star = {
@@ -243,14 +255,56 @@ function render_starfield(o)
 	
 end
 
-function render_enemies(o)
-	o.x=((o.x+o.vel_x))%150
+
+
+
+function hit_box()
+	for i in all(pl.bullets) do
+			for e in all(enemies) do
+				--print(e.x.." "..i.x.." "..e.x+7,50,50)
+				if((e.y-8<=i.y) and (e.y+8>=i.y) and(e.x-8<=i.x) and (e.x+8>=i.x)) then
+				 del(pl.bullets,i)
+				 sfx(1)
+				 e.hp=e.hp-1
+				 if (e.hp<=0) then
+				  del(enemies,e)
+				  add(enemies,add_enemy())
+				  score+=1
+				 end
+				end
+			end
+	end
+	
+	for i in all(enemy_bullets) do
+		--print(e.x.." "..i.x.." "..e.x+7,50,50)
+		if((pl.y-8<=i.y) and (pl.y+8>=i.y) and(pl.x-8<=i.x) and (pl.x+8>=i.x)) then
+			del(enemy_bullets,i)
+			sfx(1)
+			pl.lives-=1
+			enemy_bullets = { }
+			break
+		end
+	end
 	
 	
-	if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
-	spr(21,o.x,o.y)
 end
 
+
+
+function blink(nr)
+	return (((nr-(nr%2))%6)/2)+5
+end
+
+
+
+-->8
+--enemy behaviour
+
+
+
+function render_enemies(o)
+	spr(21,o.x,o.y)
+end
 
 function add_enemy()
 	local enemy = {
@@ -258,39 +312,30 @@ function add_enemy()
 		y = rnd(50)+10, 
 		sp = 21,
 		hp = 3,
-		vel_x= flr(rnd(3))+2
-		
+		vel_x= flr(rnd(3))+2,
+		shot_time=5+flr(rnd(2))
 		}
 		if(flr(rnd(2))>1) enemy.vel_x=-enemy.vel_x
 	return enemy
 end
 
-
-function hit_box()
-	for i in all(plbullets) do
-			for e in all(enemies) do
-				--print(e.x.." "..i.x.." "..e.x+7,50,50)
-				if((e.y-8<=i.y) and (e.y+8>=i.y) and(e.x-8<=i.x) and (e.x+8>=i.x)) then
-				 del(plbullets,i)
-				 sfx(1)
-				 e.hp=e.hp-1
-				 if (e.hp<=0) then
-				  del(enemies,e)
-				  add(enemies,add_enemy())
-				 end
-				end
-			end
-	end
+function enemy_behaviour(o)
+ o.x=((o.x+o.vel_x))%150
+ if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
+ o.shot_time-=1
+ if(o.shot_time<=0) then
+ 	add(enemy_bullets,bullet(o.x,o.y,false,0.75,5))
+ 	o.shot_time=flr(rnd(6))+30
+ 	print("s")
+ end
 end
 
 
 
-function blink(nr)
 
 
-	return (((nr-(nr%2))%6)/2)+5
-	
-end
+
+
 
 __gfx__
 00000000033030000030030000030330008aa900008aa8000089a800009aa800008aa90000000000000000000000000000000000000000000000000000000000
