@@ -168,7 +168,6 @@ function draw_game()
 	end
 	
 	
-	print("90 5 "..cos(0.25).." "..sin(0.25)) 
 	--debug (add a - before the bracket
 	--[[
 	print(frame)
