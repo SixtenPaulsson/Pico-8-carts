@@ -34,7 +34,7 @@ function startgame()
 	
 	enemies = {}
 	add(enemies,add_enemy())
-	add(enemies,add_enemy())
+	--add(enemies,add_enemy())
 	
 	
 	
@@ -61,7 +61,6 @@ function _update()
 	elseif state==1 then
 		update_game()
 	elseif state==2 then
-	
 		if(btnp(4) or btnp(5)) then
 			startgame()
 			state=1
@@ -100,7 +99,7 @@ function update_game()
 	if(btn(2)) pl.vel_y=-pl.speed
 	if(btn(3)) pl.vel_y=pl.speed
 	if(btnp(5)) then 
-		add(pl.bullets,bullet(pl.x,pl.y,true,0.45,5))
+		add(pl.bullets,bullet(pl.x,pl.y,true,0.25,5))
 	end
 	if(btnp(4) and pl.bombs>0) then
 		pl.bombs+=-1
@@ -156,7 +155,7 @@ function draw_game()
 		pl.muzzle-=1
 	end
 	
---ui
+	--ui
 	print("score:"..score,50,0,12)
 	
 	for i=1,maxlives do
@@ -201,8 +200,8 @@ function bullet(pl_x,pl_y,yours,angle,speed)
 end
 
 function draw_bullet(o)
-	if(o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128) then
-		del(plbullets,o)
+	if(not (o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128)) then
+		del(pl.bullets,o)
 		--sfx(1)
 	end
 	o.x+=o.vel_x
@@ -243,9 +242,7 @@ function render_starfield(o)
 	end
 	
 	
-	if(o.y>=128) then 
-		
-		
+	if(o.y>=128) then 		
 		del(stars,o)
 		local star =createstar()
 		star.y=0
@@ -261,7 +258,6 @@ end
 function hit_box()
 	for i in all(pl.bullets) do
 			for e in all(enemies) do
-				--print(e.x.." "..i.x.." "..e.x+7,50,50)
 				if((e.y-8<=i.y) and (e.y+8>=i.y) and(e.x-8<=i.x) and (e.x+8>=i.x)) then
 				 del(pl.bullets,i)
 				 sfx(1)
@@ -273,13 +269,10 @@ function hit_box()
 				 end
 				end
 			end
-	end
-	
+	end	
 	for i in all(enemy_bullets) do
-		--print(e.x.." "..i.x.." "..e.x+7,50,50)
 		if((pl.y-8<=i.y) and (pl.y+8>=i.y) and(pl.x-8<=i.x) and (pl.x+8>=i.x)) then
 			del(enemy_bullets,i)
-			sfx(1)
 			pl.lives-=1
 			enemy_bullets = { }
 			break
@@ -318,24 +311,18 @@ function add_enemy()
 		if(flr(rnd(2))>1) enemy.vel_x=-enemy.vel_x
 	return enemy
 end
-
 function enemy_behaviour(o)
  o.x=((o.x+o.vel_x))%150
  if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
  o.shot_time-=1
  if(o.shot_time<=0) then
  	add(enemy_bullets,bullet(o.x,o.y,false,0.75,5))
+	add(enemy_bullets,bullet(o.x,o.y,false,0.60,5))
+	add(enemy_bullets,bullet(o.x,o.y,false,0.90,5))
  	o.shot_time=flr(rnd(6))+30
  	print("s")
  end
 end
-
-
-
-
-
-
-
 
 __gfx__
 00000000033030000030030000030330008aa900008aa8000089a800009aa800008aa90000000000000000000000000000000000000000000000000000000000
