@@ -1,0 +1,58 @@
+Todo for shmup.p8
+
+
+
+
+----Gameplay
+
+--Bättre homescreen
+--Bättre deathscreen
+---Man ska ska kunna märka av den iaf
+--Musik
+--Mer ljudeffekter
+--Bättre scoring
+
+
+
+----Enemy
+
+--Animationer
+--Bättre sprites
+--Mer slags enemies
+----Fodder flygare
+----Boss
+----Spiral pattern
+
+
+--Bättre enemy spawning
+--Explosioner
+
+
+
+
+----Player changes
+
+--Binda något till andra knappen
+---Antingen en blank elr ett annat vapen
+----Blank
+----Charge vapen
+----Skjuta åt sidan
+----Aimbot liknande
+
+--Något som händer när man trycker x c samtidigt
+---Typ som i zeroranger, parry stance kanske
+--Bättre skadeanimation
+
+
+
+
+
+
+
+
+
+
+
+
+
+
