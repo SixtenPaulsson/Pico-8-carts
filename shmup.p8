@@ -34,10 +34,11 @@ function startgame()
 	
 	enemies = {}
 	add(enemies,add_enemy())
+
 	--add(enemies,add_enemy())
 	
 	
-	
+	timer=0
 	
 	
 	enemy_bullets = {}
@@ -119,7 +120,7 @@ function update_game()
 	
 	pl.flame+=1
 	if(pl.flame == 8) pl.flame = 4
-	
+	timer+=1
 	foreach(enemies,enemy_behaviour)
 	
 	hit_box()
@@ -168,6 +169,9 @@ function draw_game()
 	end
 	
 	
+	
+	print(angle(timer))
+	print(timer)
 	--debug (add a - before the bracket
 	--[[
 	print(frame)
@@ -199,16 +203,17 @@ function bullet(pl_x,pl_y,yours,angle,speed)
 end
 
 function draw_bullet(o)
-	if(not (o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128)) then
+	if((o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128)) then
+		o.x+=o.vel_x
+		o.y+=o.vel_y
+	
+		spr(o.bspr,o.x,o.y)
+	
+		if(o.bspr != 18 and o.owner==true) o.bspr+=1
+	else
 		del(pl.bullets,o)
-		--sfx(1)
+		sfx(1)
 	end
-	o.x+=o.vel_x
-	o.y+=o.vel_y
-	
-	spr(o.bspr,o.x,o.y)
-	
-	if(o.bspr != 18) o.bspr+=1
 end
 
 
@@ -289,6 +294,14 @@ end
 
 
 
+function angle(x)
+	return  (x%360)/90%1/4+flr(x%360/90)/4
+end
+
+
+
+
+
 -->8
 --enemy behaviour
 
@@ -305,7 +318,7 @@ function add_enemy()
 		sp = 21,
 		hp = 3,
 		vel_x= flr(rnd(3))+2,
-		shot_time=5+flr(rnd(2))
+		shot_time=3+flr(rnd(2))
 		}
 		if(flr(rnd(2))>1) enemy.vel_x=-enemy.vel_x
 	return enemy
@@ -315,10 +328,8 @@ function enemy_behaviour(o)
  if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
  o.shot_time-=1
  if(o.shot_time<=0) then
- 	add(enemy_bullets,bullet(o.x,o.y,false,0.75,5))
-	add(enemy_bullets,bullet(o.x,o.y,false,0.60,5))
-	add(enemy_bullets,bullet(o.x,o.y,false,0.90,5))
- 	o.shot_time=flr(rnd(6))+30
+ 	--add(enemy_bullets,bullet(o.x,o.y,false,angle(timer*9),5))
+ 	o.shot_time=flr(rnd(1))
  	print("s")
  end
 end
