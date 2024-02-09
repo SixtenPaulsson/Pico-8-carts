@@ -35,13 +35,12 @@ function startgame()
 	
 	---[[
 	add(enemies,add_enemy())
-
 	--add(enemies,add_enemy())
 	--add(enemies,add_enemy())
 	--]]
 	
 	
-	timer=0
+	
 	
 	
 	enemy_bullets = {}
@@ -130,7 +129,7 @@ function update_game()
 	
 	pl.flame+=1
 	if(pl.flame == 8) pl.flame = 4
-	timer+=1
+	
 	foreach(enemies,enemy_behaviour)
 	
 	hit_box()
@@ -180,9 +179,6 @@ function draw_game()
 	end
 	
 	
-	
-	print(angle(timer))
-	print(timer)
 	--debug (add a - before the bracket
 	---[[
 	--print(frame)
@@ -345,14 +341,6 @@ end
 
 function check_hit(o,b)
 	return ((o.x+4-o.size/2<=b.x+3+b.size/2) and (o.x+3+o.size/2>=b.x+4-b.size/2) and (o.y+4-o.size/2<=b.y+3+b.size/2) and (o.y+3+o.size/2>=b.y+4-b.size/2)) end 
-
-
-function angle(x)
-	return  (x%360)/90%1/4+flr(x%360/90)/4
-end
-
-
-
 
 
 -->8
