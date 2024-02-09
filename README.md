@@ -8,3 +8,4 @@ Gjord genom att följa halft följa den [här](https://www.youtube.com/watch?v=8
 
 
 ### sspr.p8
+Komprimerade bilder
