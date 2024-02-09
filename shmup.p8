@@ -9,13 +9,12 @@ function _init()
 end
 
 function startgame()
-	pl = {
-	x = 63,
+	pl = { x = 63,
 	y = 100,
 	vel_x=0,
 	vel_y=0,
 	speed=3,
-	
+	size=6,
 	flame = 4,
 	shipspr=2,
 	muzzle=0,
@@ -33,8 +32,12 @@ function startgame()
 	
 	
 	enemies = {}
+	
+	---[[
 	add(enemies,add_enemy())
 	--add(enemies,add_enemy())
+	--add(enemies,add_enemy())
+	--]]
 	
 	
 	
@@ -99,7 +102,10 @@ function update_game()
 	if(btn(2)) pl.vel_y=-pl.speed
 	if(btn(3)) pl.vel_y=pl.speed
 	if(btnp(5)) then 
-		add(pl.bullets,bullet(pl.x,pl.y,true,0.25,5))
+		--add(pl.bullets,bullet(pl.x,pl.y,true,0.28,5))
+  add(pl.bullets,bullet(pl.x,pl.y,true,0.25,5,8))
+  --add(pl.bullets,bullet(pl.x,pl.y,true,0.22,5))
+
 	end
 	if(btnp(4) and pl.bombs>0) then
 		pl.bombs+=-1
@@ -114,8 +120,12 @@ function update_game()
 	
 	if(pl.x>128) pl.x=0
 	if(pl.x<0) pl.x=128
-	if(pl.y>128) pl.y=0
-	if(pl.y<0) pl.y=128
+	
+	---[[
+	if(pl.y>120) pl.y=120
+	if(pl.y<0) pl.y=0
+	--]]
+	
 	
 	pl.flame+=1
 	if(pl.flame == 8) pl.flame = 4
@@ -138,6 +148,7 @@ function draw_game()
 	cls(0)
 					
  --draw ship
+ 
 	spr(pl.shipspr,pl.x,pl.y)
 	spr(pl.flame,pl.x,pl.y+8)
 	
@@ -169,8 +180,17 @@ function draw_game()
 	
 	
 	--debug (add a - before the bracket
-	--[[
-	print(frame)
+	---[[
+	--print(frame)
+	--rect(pl.x+1,pl.y+1,pl.x+6,pl.y+6,7)
+	--print(pl.x.." "..pl.y)
+	--rect((pl.x+4-pl.size/2),(pl.y+4-pl.size/2),(pl.x+3+pl.size/2),(pl.y+3+pl.size/2))
+
+	--print(((pl.x+4-pl.size/2)<=104) and ((pl.x+3+pl.size/2)>=101))
+	--print((pl.x+4-pl.size/2))
+	--print((pl.x+3+pl.size/2))
+	--print((pl.y+4-pl.size/2)>=100)
+	--print((pl.y+3+pl.size/2)>=100)
 	--]]
 end
 
@@ -184,23 +204,27 @@ end
 --also some other elements
 
 
-function bullet(pl_x,pl_y,yours,angle,speed)
-	local bullet= {
-	x = pl_x,
+function bullet(pl_x,pl_y,yours,angle,speed,b_size)
+	local bullet= { x = pl_x,
 	y = pl_y-2,
 	bspr = 16,
 	--true==player
 	owner = yours,
 	vel_x = cos(angle)*speed,
-	vel_y = sin(angle)*speed
+	vel_y = sin(angle)*speed,
+	size = b_size
 	}
+	if(yours==false) bullet.bspr=32
 	sfx(0)
 	return bullet
 end
 
 function draw_bullet(o)
+
+ 
 	if(not (o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128)) then
 		del(pl.bullets,o)
+		del(enemy_bullets,o)
 		--sfx(1)
 	end
 	o.x+=o.vel_x
@@ -208,7 +232,7 @@ function draw_bullet(o)
 	
 	spr(o.bspr,o.x,o.y)
 	
-	if(o.bspr != 18) o.bspr+=1
+	if(o.bspr != 18 and o.bspr !=32) o.bspr+=1
 end
 
 
@@ -220,7 +244,7 @@ function createstar()
 	local star = {
 		x = flr(rnd(128)),
 		y = flr(rnd(128)),
-		vely = (flr(rnd(4))+1)
+		vely = (flr(rnd(3))+1)
 	}
 	if(star.vely==4) then
 		star.col = 12
@@ -255,9 +279,21 @@ end
 
 
 function hit_box()
+
+
+
+	--hitbox formula
+	--
+	--pl.x+4-size//2
+	--00200200
+	--pl.x+3+size//2
+	--
+	--
+	
+	
 	for i in all(pl.bullets) do
 			for e in all(enemies) do
-				if((e.y-8<=i.y) and (e.y+8>=i.y) and(e.x-8<=i.x) and (e.x+8>=i.x)) then
+				if(check_hit(e,i)) then
 				 del(pl.bullets,i)
 				 sfx(1)
 				 e.hp=e.hp-1
@@ -270,10 +306,22 @@ function hit_box()
 			end
 	end	
 	for i in all(enemy_bullets) do
-		if((pl.y-8<=i.y) and (pl.y+8>=i.y) and(pl.x-8<=i.x) and (pl.x+8>=i.x)) then
+		
+		rect(pl.x+1,pl.y+1,pl.x+6,pl.y+6)
+		
+		
+		
+		
+		
+		
+		if(check_hit(pl,i)) then
 			del(enemy_bullets,i)
+			i.vel_x=0
+			i.vel_y=0
+			
 			pl.lives-=1
 			enemy_bullets = { }
+			sfx(2)
 			break
 		end
 	end
@@ -287,6 +335,12 @@ function blink(nr)
 	return (((nr-(nr%2))%6)/2)+5
 end
 
+function aim(x1,y1,x2,y2)
+ return atan2(x2 - x1, y2 - y1)
+end
+
+function check_hit(o,b)
+	return ((o.x+4-o.size/2<=b.x+3+b.size/2) and (o.x+3+o.size/2>=b.x+4-b.size/2) and (o.y+4-o.size/2<=b.y+3+b.size/2) and (o.y+3+o.size/2>=b.y+4-b.size/2)) end 
 
 
 -->8
@@ -301,26 +355,29 @@ end
 function add_enemy()
 	local enemy = {
 		x = rnd(110)+10, 
-		y = rnd(50)+10, 
+		y = rnd(20)+10, 
 		sp = 21,
 		hp = 3,
 		vel_x= flr(rnd(3))+2,
-		shot_time=5+flr(rnd(2))
+		shot_time=5+flr(rnd(2)),
+		size = 6
 		}
 		if(flr(rnd(2))>1) enemy.vel_x=-enemy.vel_x
 	return enemy
 end
+
 function enemy_behaviour(o)
+
+	---[[
  o.x=((o.x+o.vel_x))%150
  if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
  o.shot_time-=1
  if(o.shot_time<=0) then
- 	add(enemy_bullets,bullet(o.x,o.y,false,0.75,5))
-	add(enemy_bullets,bullet(o.x,o.y,false,0.60,5))
-	add(enemy_bullets,bullet(o.x,o.y,false,0.90,5))
- 	o.shot_time=flr(rnd(6))+30
+ 	add(enemy_bullets,bullet(o.x,o.y,false,aim(o.x,o.y,pl.x,pl.y),3,4))
+ 	o.shot_time=flr(rnd(6))+20
  	print("s")
  end
+ --]]
 end
 
 __gfx__
@@ -342,10 +399,10 @@ __gfx__
 00000000000990000999999000000000000000000555555000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00cccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00c77c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00c77c00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
+00cccc00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00022000088008800880088000000090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -489,3 +546,4 @@ __label__
 __sfx__
 000100001d5100e5100d510077100671005710047100e5100e510095100851007510065100651006510055100350000500005000d4000d400340000c4000b4000b40006000060000600005000050000400004000
 000100001361017610126101462018610046100461004610076100a610096100a6000a60000600036000460003600036000360003600036000360001400014000040000400004000040000400004000140001400
+000700000000003150041600140000400004002740026400264002540025400000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
