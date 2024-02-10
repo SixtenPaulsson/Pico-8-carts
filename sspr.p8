@@ -19,25 +19,26 @@ function _draw()
 	--draw4(16,0,50,50)
 	
 	
-	draw4(2,0,50,50,0,0,1,1)
+	--draw4(2,2,50,50,1111)
 	
 	
-	draw4(2,2,50,60,1,1,0,0)
+	draw4(2,2,50,62,0100)
 	
 	
 end
 
-function draw4(sp,where,x,y,p0,p1,p2,p3)
+
+function draw4(sp,where,x,y,p)
 	xp=(sp%16)*8+4*(where%2)
 	yp=(sp\16)*8+4*flr(where/2)
 	if((where%2)==1)xm=true
-	ym=false
+	p=p or 1111
 	if(flr(where/2)==1)ym=true
 	print(flr(where/2)==1)ym=true
-	if(not(p0==0)) sspr(xp,yp,4,4,x,y,4,4,xm,ym)
-	if(not(p1==0)) sspr(xp,yp,4,4,x+4,y,4,4,not xm,ym)
-	if(not(p2==0)) sspr(xp,yp,4,4,x,y+4,4,4,xm,not ym)
-	if(not(p3==0)) sspr(xp,yp,4,4,x+4,y+4,4,4,not xm, not ym)
+	if(p>=1000) sspr(xp,yp,4,4,x,y,4,4,xm,ym)
+	if(flr(p/10)>=100) sspr(xp,yp,4,4,x+4,y,4,4,not xm,ym)
+	if(not(flr(p/10)%10==0)) sspr(xp,yp,4,4,x,y+4,4,4,xm,not ym)
+	if(not((p%10)==0)) sspr(xp,yp,4,4,x+4,y+4,4,4,not xm, not ym)
 end 	
 __gfx__
 00000000033030000030000000030330008aa900008aa8000089a800009aa800008aa90000000000000000000000000000000000000000000000000000000000
