@@ -342,7 +342,19 @@ end
 function check_hit(o,b)
 	return ((o.x+4-o.size/2<=b.x+3+b.size/2) and (o.x+3+o.size/2>=b.x+4-b.size/2) and (o.y+4-o.size/2<=b.y+3+b.size/2) and (o.y+3+o.size/2>=b.y+4-b.size/2)) end 
 
-
+function draw4(sp,where,x,y,p)
+ local p=p or 1111
+ local xm = false
+ local ym = false
+	local xp=(sp%16)*8+4*(where%2)
+	local yp=(sp\16)*8+4*flr(where/2)
+	if((where%2)==1) xm=true
+	if(flr(where/2)==1) ym=true
+	if(p%10000>=1000) sspr(xp,yp,4,4,x,y,4,4,xm,ym)
+	if(p%1000>=100) sspr(xp,yp,4,4,x+4,y,4,4,not xm,ym)
+	if(p%100>=10) sspr(xp,yp,4,4,x,y+4,4,4,xm,not ym)
+	if(p%10>=1) sspr(xp,yp,4,4,x+4,y+4,4,4,not xm, not ym)
+end 	
 -->8
 --enemy behaviour
 
