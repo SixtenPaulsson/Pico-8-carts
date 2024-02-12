@@ -6,12 +6,6 @@ function _init()
 	cls(0)
 	state = 0
 	frame = 0
-	bul = explo_2(100,120)
-	
-	for i=0, 15 do
-		pal(i,i+128,1)
-	end
-	
 end
 
 function startgame()
@@ -24,31 +18,17 @@ function startgame()
 	flame = 4,
 	shipspr=2,
 	muzzle=0,
-	
 	lives = 3,
 	bombs = 3,
 	bullets = {}
-	
 	}
 	maxlives = 3
 	score = 0
 	frame = 0
-	
-	
-	
-	
 	enemies = {}
-	
 	---[[
 	add(enemies,add_enemy())
-	--add(enemies,add_enemy())
-	--add(enemies,add_enemy())
 	--]]
-	
-	
-	
-	
-	
 	enemy_bullets = {}
 	explos = {}
 	particles = {}
@@ -80,7 +60,6 @@ function _update()
 end
 
 function _draw()
-	print(state)
 	if state==0 then
 		cls(1)
 		print("shmup game",45,10,blink(frame))
@@ -90,8 +69,7 @@ function _draw()
 				draw_game()
 	elseif state==2 then
 		cls(8)
-		print("dead",0,0,4)
-		
+		print("dead",64,64,7)
 	end
 end
 
@@ -108,24 +86,16 @@ function update_game()
 	if(btn(1)) pl.vel_x=pl.speed
 	if(btn(2)) pl.vel_y=-pl.speed
 	if(btn(3)) pl.vel_y=pl.speed
-	if(btnp(5)) then 
-		add(pl.bullets,aimedshot())
-		--add(pl.bullets,bullet(pl.x,pl.y,true,0.28,5))
-  --add(pl.bullets,bullet(pl.x,pl.y,true,0.25,5,8))
-  --add(pl.bullets,bullet(pl.x,pl.y,true,0.22,5))
-
-	end
+	if(btnp(5)) add(pl.bullets,add_bullet(pl.x,pl.y,true,0.25,5,8))
 	if(btnp(4) and pl.bombs>0) then
 		pl.bombs+=-1
 		enemy_bullets= {}
 	end
-	
 	pl.x+=pl.vel_x
 	pl.y+=pl.vel_y
 	pl.shipspr = 2
 	if(pl.vel_x>0) pl.shipspr = 3
 	if(pl.vel_x<0) pl.shipspr = 1
-	
 	if(pl.x>128) pl.x=0
 	if(pl.x<0) pl.x=128
 	
@@ -133,18 +103,10 @@ function update_game()
 	if(pl.y>120) pl.y=120
 	if(pl.y<0) pl.y=0
 	--]]
-	
-	
-	pl.flame+=1
-	if(pl.flame == 8) pl.flame = 4
-	
+	pl.flame=((pl.flame+1)%7)+4
 	foreach(enemies,enemy_behaviour)
-	
 	hit_box()
-	
-	
-	
-	
+
 end
 
 -->8
@@ -154,8 +116,7 @@ function draw_game()
 	
 	--clear screen
 	cls(0)
-	print(bul.x,50,50)
- --draw ship
+    --draw ship
  
 	spr(pl.shipspr,pl.x,pl.y)
 	spr(pl.flame,pl.x,pl.y+8)
@@ -166,24 +127,17 @@ function draw_game()
 	foreach(enemy_bullets,draw_bullet)
 	foreach(explos,explode)
 	foreach(particles,render_p)
-	--foreach(pl.bullets,draw_bullet)
-	
-	
-	
 	if(pl.muzzle > 0) then
 		circfill(pl.x+2,pl.y-1,pl.muzzle,7)
 		circfill(pl.x+5,pl.y-1,pl.muzzle,7)
 		pl.muzzle-=1
 	end
-	
 	--ui
 	print("score:"..score,50,0,12)
-	
 	for i=1,maxlives do
 		if (pl.lives>=i) spr(49,0+i*9,0)
 		if (pl.lives<i) spr(50,0+i*9,0)
 	end
-	
 	for i=1,pl.bombs do
 	 spr(51,128-i*9)
 	end
@@ -203,18 +157,80 @@ function draw_game()
 	--print((pl.y+3+pl.size/2)>=100)
 	--]]
 end
+-->8
+--helpers
+function hit_box()
+	for i in all(pl.bullets) do
+			for e in all(enemies) do
+				if(check_hit(e,i)) then
+					add(explos,add_hit(e.x,e.y))
+				 del(pl.bullets,i)
+				 sfx(1)
+				 e.hp=e.hp-1
+				 if (e.hp<=0) then
+				  del(enemies,e)
+				  add(enemies,add_enemy())
+				  score+=1
+				 end
+				end
+			end
+	end	
+	for i in all(enemy_bullets) do
+		if(check_hit(pl,i)) then
+			del(enemy_bullets,i)
+			add(explos,add_hit(pl.x,pl.y))
+			i.vel_x=0
+			i.vel_y=0
+			pl.lives-=1
+			enemy_bullets = { }
+			sfx(2)
+			break
+		end
+	end
+end
 
 
 
+function blink(nr)
+	return (((nr-(nr%2))%6)/2)+5
+end
+
+function aim(x1,y1,x2,y2)
+ return atan2(x2 - x1, y2 - y1)
+end
+
+function check_hit(o,b)
+	return ((o.x+4-o.size/2<=b.x+3+b.size/2) and (o.x+3+o.size/2>=b.x+4-b.size/2) and (o.y+4-o.size/2<=b.y+3+b.size/2) and (o.y+3+o.size/2>=b.y+4-b.size/2)) 
+end 
+
+function explode(o)
+	if(o.timer>=20) then
+		del(explos,o)
+	else
+		o.timer+=1
+		--circ(o.x,o.y,15,7)
+		--spr(53,o.x,o.y)
+	end
+end
 
 
+function enemy_behaviour(o)
+	---[[
+ o.x=((o.x+o.vel_x))%150
+ if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
+ o.shot_time-=1
+ if(o.shot_time<=0) then
+ 	add(enemy_bullets,add_bullet(o.x,o.y,false,aim(o.x,o.y,pl.x,pl.y),3,4))
+ 	add(enemy_bullets,add_bullet(o.x,o.y,false,0.75,3,4))
+ 	o.shot_time=20
+ 	print("s")
+ end
+ --]]
+end
 
 -->8
---everything to do with bullets
---also some other elements
-
-
-function bullet(pl_x,pl_y,yours,angle,speed,b_size)
+--adders
+function add_bullet(pl_x,pl_y,yours,angle,speed,b_size)
 	local bullet= { x = pl_x,
 	y = pl_y-2,
 	bspr = 16,
@@ -229,26 +245,45 @@ function bullet(pl_x,pl_y,yours,angle,speed,b_size)
 	return bullet
 end
 
-function draw_bullet(o)
+function add_hit(x,y)
+	local explo = {
+		x = x,
+		y = y,
+		timer=0
+	}
+	for i=1, 20+flr(rnd(5)) do
+		add(particles,explo_2(x,y))
+ end
+	return explo
+end
 
- 
-	if(not (o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128)) then
-		del(pl.bullets,o)
-		del(enemy_bullets,o)
-		--sfx(1)
-	end
-	o.x+=o.vel_x
-	o.y+=o.vel_y
-	
-	spr(o.bspr,o.x,o.y)
-	
-	if(o.bspr != 18 and o.bspr !=32) o.bspr+=1
+function explo_2(x,y)
+		local par = {
+		x = x,
+		y = y,
+		vel_x = (-1+rnd(2)),
+		vel_y = (-1+rnd(2)),
+		timer = 10+flr(rnd(10)),
+		sprite = 52,
+		part =flr(rnd(10))%4
+		}
+	 return par
 end
 
 
-
-
-
+function add_enemy()
+	local enemy = {
+		x = rnd(110)+10, 
+		y = 20, 
+		sp = 21,
+		hp = 3,
+		vel_x= flr(rnd(3))+2,
+		shot_time=30+flr(rnd(2)),
+		size = 6
+		}
+		if(flr(rnd(2))>1) enemy.vel_x=-enemy.vel_x
+	return enemy
+end
 
 function createstar()
 	local star = {
@@ -265,7 +300,25 @@ function createstar()
 	end
 	return star
 end
+-->8
+--renderers
 
+
+function draw_bullet(o)
+	if(not (o.y>=0 and o.y<=128 and o.x>=0 and o.x<=128)) then
+		del(pl.bullets,o)
+		del(enemy_bullets,o)
+		--sfx(1)
+	end
+	o.x+=o.vel_x
+	o.y+=o.vel_y
+	spr(o.bspr,o.x,o.y)
+	if(o.bspr != 18 and o.bspr !=32) o.bspr+=1
+end
+
+function render_enemies(o)
+	spr(21,o.x,o.y)
+end
 
 function render_starfield(o)
 	o.y+=o.vely
@@ -273,174 +326,13 @@ function render_starfield(o)
 	if(o.vely==4) then
 		line(o.x,o.y-6,o.x,o.y-1,6)
 	end
-	
-	
 	if(o.y>=128) then 		
 		del(stars,o)
 		local star =createstar()
 		star.y=0
 		add(stars,star)
 	end
-	
-	
 end
-
-
-
-
-function hit_box()
-
-
-
-	--hitbox formula
-	--
-	--pl.x+4-size//2
-	--00200200
-	--pl.x+3+size//2
-	--
-	--
-	
-	
-	for i in all(pl.bullets) do
-			for e in all(enemies) do
-				if(check_hit(e,i)) then
-					add(explos,add_hit(e.x,e.y))
-					for i=1, 14 do
-		    add(particles,explo_2(e.x,e.y))
-		    
-	    end
-	    --print(e.y)
-	    print(bul.x)
-				 del(pl.bullets,i)
-				 sfx(1)
-				 e.hp=e.hp-1
-				 if (e.hp<=0) then
-				  del(enemies,e)
-				  add(enemies,add_enemy())
-				  score+=1
-				 end
-				end
-			end
-	end	
-	for i in all(enemy_bullets) do
-		
-		rect(pl.x+1,pl.y+1,pl.x+6,pl.y+6)
-		
-		
-		
-		
-		
-		
-		if(check_hit(pl,i)) then
-			del(enemy_bullets,i)
-			i.vel_x=0
-			i.vel_y=0
-			
-			pl.lives-=1
-			enemy_bullets = { }
-			sfx(2)
-			break
-		end
-	end
-	
-	
-end
-
-
-
-function blink(nr)
-	return (((nr-(nr%2))%6)/2)+5
-end
-
-function aim(x1,y1,x2,y2)
- return atan2(x2 - x1, y2 - y1)
-end
-
-function check_hit(o,b)
-	return ((o.x+4-o.size/2<=b.x+3+b.size/2) and (o.x+3+o.size/2>=b.x+4-b.size/2) and (o.y+4-o.size/2<=b.y+3+b.size/2) and (o.y+3+o.size/2>=b.y+4-b.size/2)) end 
-
-function draw4(sp,where,x,y,p)
- local p=p or 1111
- local xm = false
- local ym = false
-	local xp=(sp%16)*8+4*(where%2)
-	local yp=(sp\16)*8+4*flr(where/2)
-	if((where%2)==1) xm=true
-	if(flr(where/2)==1) ym=true
-	if(p%10000>=1000) sspr(xp,yp,4,4,x,y,4,4,xm,ym)
-	if(p%1000>=100) sspr(xp,yp,4,4,x+4,y,4,4,not xm,ym)
-	if(p%100>=10) sspr(xp,yp,4,4,x,y+4,4,4,xm,not ym)
-	if(p%10>=1) sspr(xp,yp,4,4,x+4,y+4,4,4,not xm, not ym)
-end 	
--->8
---enemy behaviour
-
-
-
-function render_enemies(o)
-	spr(21,o.x,o.y)
-end
-
-function add_enemy()
-	local enemy = {
-		x = rnd(110)+10, 
-		y = 20, 
-		sp = 21,
-		hp = 3,
-		vel_x= flr(rnd(3))+2,
-		shot_time=30+flr(rnd(2)),
-		size = 6
-		}
-		if(flr(rnd(2))>1) enemy.vel_x=-enemy.vel_x
-	return enemy
-end
-
-function enemy_behaviour(o)
-
-	---[[
- o.x=((o.x+o.vel_x))%150
- if(o.x<10 or o.x>120) o.vel_x=-o.vel_x
- o.shot_time-=1
- if(o.shot_time<=0) then
- 	add(enemy_bullets,bullet(o.x,o.y,false,aim(o.x,o.y,pl.x,pl.y),3,4))
- 	o.shot_time=20
- 	print("s")
- end
- --]]
-end
-
--->8
-
-function explo_2(sak,y)
-		local par = {
-		x = sak,
-		y = y,
-		vel_x = (-1+rnd(2)),
-		vel_y = (-1+rnd(2)),
-		timer = 10+flr(rnd(5))
-		}
-	 return par
-end
-
-function add_hit(x,y)
-	local explo = {
-		x = x,
-		y = y,
-		timer=0
-	}
-	return explo
-end
-
-function explode(o)
-	if(o.timer>=20) then
-		del(explos,o)
-	else
-		o.timer+=1
-		--circ(o.x,o.y,15,7)
-		--spr(53,o.x,o.y)
-	end
-end
-
 
 function render_p(o)
 	
@@ -448,23 +340,23 @@ function render_p(o)
 	o.timer-=1
 	o.x+=o.vel_x
 	o.y+=o.vel_y
- spr(54,o.x,o.y)
+	draw4(o.sprite,o.part,o.x,o.y,1111)
+ --spr(o.sprite,o.x,o.y)
  --print("hello",50,50)
 end
--->8
 
 
-
-
-function aimedshot()
- print(enemies[1])
-	if(true) then
-  a=bullet(pl.x,pl.y,true,aim(pl.x,pl.y,enemies[1].x+enemies[1].vel_x*2,enemies[1].y),5,8)
- else 
-  a=bullet(pl.x,pl.y,true,0.25,5,8)
- end
- return a
-end
+function draw4(sp,where,x,y,p)
+ local p=p or 1111
+ local xm = (where%2)==1
+ local ym = (flr(where/2)==1)
+	local xp=(sp%16)*8+4*(where%2)
+	local yp=(sp\16)*8+4*flr(where/2)
+	if(p%10000>=1000) sspr(xp,yp,4,4,x,y,4,4,xm,ym)
+	if(p%1000>=100) sspr(xp,yp,4,4,x+4,y,4,4,not xm,ym)
+	if(p%100>=10) sspr(xp,yp,4,4,x,y+4,4,4,xm,not ym)
+	if(p%10>=1) sspr(xp,yp,4,4,x+4,y+4,4,4,not xm, not ym)
+end 	
 __gfx__
 00000000033030000030030000030330008aa900008aa8000089a800009aa800008aa90000000000000000000000000000000000000000000000000000000000
 000000000b99b00000b99b00000b99b0009a8000009aa900009a9900009a9900009a8a8000000000000000000000000000000000000000000000000000000000
@@ -474,14 +366,14 @@ __gfx__
 0070070039a931b03b1991b30b139a93000000000000000000088000000000000000000000000000000000000000000000000000000000000000000000000000
 0000000003b33b3003b33b3003b33b30000000000000000000008800000000000000000000000000000000000000000000000000000000000000000000000000
 00000000003330000003300000033300000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-000000000009900009999990000000000000000000011000000000000001100000bbbb0000000000000000000000000000000000000000000000000000000000
-00099000099aa99099aaaa99000000000000000006211260000000000621126000bbbb0000000000000000000000000000000000000000000000000000000000
-009aa90009a77a909aa77aa9000000000000000061888816000000006188881600bbbb0000000000000000000000000000000000000000000000000000000000
-09a77a909a7777999a7777a90000000000000000218668120000000021866812066bb66000000000000000000000000000000000000000000000000000000000
-09a77a909a7777999a7777a900000000000000000186681000000000018668105566665500000000000000000000000000000000000000000000000000000000
-009aa90009a77a909aa77aa900000000000000000016610000000000001661005363363500000000000000000000000000000000000000000000000000000000
-00099000099aa99099aaaa9900000000000000000016610000000000001661005563365500000000000000000000000000000000000000000000000000000000
-00000000000990000999999000000000000000000010010000000000001001000555555000000000000000000000000000000000000000000000000000000000
+00000000000aa00009999990000000000000000000011000000000000001100000bbbb0000000000000000000000000000000000000000000000000000000000
+000770000aa77aa099aaaa99000000000000000006211260000000000621126000bbbb0000000000000000000000000000000000000000000000000000000000
+007777000a7777a09aa77aa9000000000000000061888816000000006188881600bbbb0000000000000000000000000000000000000000000000000000000000
+07777770a777777a9a7777a90000000000000000218668120000000021866812066bb66000000000000000000000000000000000000000000000000000000000
+07777770a777777a9a7777a900000000000000000186681000000000018668105566665500000000000000000000000000000000000000000000000000000000
+007777000a7777a09aa77aa900000000000000000016610000000000001661005363363500000000000000000000000000000000000000000000000000000000
+000770000aa77aa099aaaa9900000000000000000016610000000000001661005563365500000000000000000000000000000000000000000000000000000000
+00000000000aa0000999999000000000000000000010010000000000001001000555555000000000000000000000000000000000000000000000000000000000
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00099000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00999900000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
@@ -492,10 +384,10 @@ __gfx__
 00000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00022000088008800880088000000090000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 002882008888888880088008001199a9000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
-00288200888888888000000801111a900000000000088000000aa000000110000000000000000000000000000000000000000000000000000000000000000000
-02e88e208888888880000008016d1d10000000000088880000aaaa00001111000000000000000000000000000000000000000000000000000000000000000000
-2e87c8e2088888800800008001d66dd0000000000088880000aaaa00001111000000000000000000000000000000000000000000000000000000000000000000
-288118820088880000800800011d6d100000000000088000000aa000000110000000000000000000000000000000000000000000000000000000000000000000
+00288200888888888000000801111a900008900000099000000aa000000110000000000000000000000000000000000000000000000000000000000000000000
+02e88e208888888880000008016d1d10008899000099990000aaaa00001111000000000000000000000000000000000000000000000000000000000000000000
+2e87c8e2088888800800008001d66dd000aa77000099990000aaaa00001111000000000000000000000000000000000000000000000000000000000000000000
+288118820088880000800800011d6d10000a700000099000000aa000000110000000000000000000000000000000000000000000000000000000000000000000
 028dd820000880000008800000111100000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 00299200000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000000
 __label__
