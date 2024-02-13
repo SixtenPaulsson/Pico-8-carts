@@ -2,6 +2,10 @@ Todo for shmup.p8
 
 
 
+Todo for shmup.p8
+
+
+
 
 ----Gameplay
 
@@ -11,6 +15,20 @@ Todo for shmup.p8
 --Musik
 --Mer ljudeffekter
 --Bättre scoring
+
+--Använda sspr istället för spr för att kunna spara på sprite plats, tex ba en modell för alla typer av skott
+---Saker som kan bli ssprade
+----Skeppet
+----Enemies
+----Bullets(verkligen bullets, kan spara en 4 bullets på en plats)
+----Hjärta
+
+
+
+---Scrollande backgrounds
+
+
+
 
 
 
@@ -39,15 +57,18 @@ Todo for shmup.p8
 ----Skjuta åt sidan
 ----Aimbot liknande
 
+
+
+
+
 --Något som händer när man trycker x c samtidigt
 ---Typ som i zeroranger, parry stance kanske
 --Bättre skadeanimation
 
 
 
-
-
-
+--Gör modellen snyggare
+--Flame trailen ska göras bättre också, kanske till och med ta bort den
 
 
 
